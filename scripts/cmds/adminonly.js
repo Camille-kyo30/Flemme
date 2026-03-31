@@ -16,10 +16,12 @@ module.exports = {
 		},
 		category: "owner",
 		guide: {
-			vi: "   {pn} [on | off]: bật/tắt chế độ chỉ admin mới có thể sử dụng bot"
-				+ "\n   {pn} noti [on | off]: bật/tắt thông báo khi người dùng không phải là admin sử dụng bot",
-			en: "   {pn} [on | off]: turn on/off the mode only admin can use bot"
-				+ "\n   {pn} noti [on | off]: turn on/off the notification when user is not admin use bot"
+			vi:
+				"{pn} [on | off]: bật/tắt chế độ admin only\n" +
+				"{pn} noti [on | off]: bật/tắt thông báo non-admin",
+			en:
+				"{pn} [on | off]: turn on/off admin only mode\n" +
+				"{pn} noti [on | off]: toggle non-admin notification"
 		}
 	},
 
@@ -27,43 +29,43 @@ module.exports = {
 		vi: {
 			turnedOn: "Đã bật chế độ chỉ admin mới có thể sử dụng bot",
 			turnedOff: "Đã tắt chế độ chỉ admin mới có thể sử dụng bot",
-			turnedOnNoti: "Đã bật thông báo khi người dùng không phải là admin sử dụng bot",
-			turnedOffNoti: "Đã tắt thông báo khi người dùng không phải là admin sử dụng bot"
+			turnedOnNoti: "Đã bật thông báo non-admin",
+			turnedOffNoti: "Đã tắt thông báo non-admin"
 		},
 		en: {
-			turnedOn: "Turned on the mode only admin can use bot",
-			turnedOff: "Turned off the mode only admin can use bot",
-			turnedOnNoti: "Turned on the notification when user is not admin use bot",
-			turnedOffNoti: "Turned off the notification when user is not admin use bot"
+			turnedOn: "Admin-only mode enabled",
+			turnedOff: "Admin-only mode disabled",
+			turnedOnNoti: "Non-admin notification enabled",
+			turnedOffNoti: "Non-admin notification disabled"
 		}
 	},
 
 	onStart: function ({ args, message, getLang }) {
-		let isSetNoti = false;
-		let value;
-		let indexGetVal = 0;
+		const isNoti = args[0] === "noti";
+		const mode = isNoti ? args[1] : args[0];
 
-		if (args[0] == "noti") {
-			isSetNoti = true;
-			indexGetVal = 1;
-		}
+		const value =
+			mode === "on" ? true :
+			mode === "off" ? false :
+			null;
 
-		if (args[indexGetVal] == "on")
-			value = true;
-		else if (args[indexGetVal] == "off")
-			value = false;
-		else
+		if (value === null)
 			return message.SyntaxError();
 
-		if (isSetNoti) {
+		if (isNoti) {
 			config.hideNotiMessage.adminOnly = !value;
-			message.reply(getLang(value ? "turnedOnNoti" : "turnedOffNoti"));
-		}
-		else {
+		} else {
 			config.adminOnly.enable = value;
-			message.reply(getLang(value ? "turnedOn" : "turnedOff"));
 		}
 
 		fs.writeFileSync(client.dirConfig, JSON.stringify(config, null, 2));
+
+		return message.reply(
+			getLang(
+				value
+					? (isNoti ? "turnedOnNoti" : "turnedOn")
+					: (isNoti ? "turnedOffNoti" : "turnedOff")
+			)
+		);
 	}
 };
